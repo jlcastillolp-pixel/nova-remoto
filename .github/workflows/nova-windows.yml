@@ -134,14 +134,23 @@ jobs:
           # El instalador renombra el exe a <APP_NAME>.exe; se distribuye ya con ese nombre.
           mv ./rustdesk/rustdesk.exe ./rustdesk/${{ env.APP_NAME }}.exe
 
+      # APP_NAME ("NovaRemoto", 10 bytes) no se busca en la dll: el compilador lo guarda como valores
+      # inmediatos dentro de las instrucciones, no como cadena. Lo garantiza aplicar_marca.sh en la
+      # fuente; en el binario se controla el recurso de versión del exe (UTF-16, desde Runner.rc).
       - name: Verificar marca en el binario
-        shell: bash
+        shell: python
         run: |
-          for s in remoto.novatechnology-support.com.ar ZStbb6QWLFXZPoCU4oY5DYUXhV1E8Wmgeqqb51CeszE= NovaRemoto; do
-            grep -qaF "$s" rustdesk/librustdesk.dll || { echo "falta $s en librustdesk.dll"; exit 1; }
-          done
-          if grep -qaF "rs-ny.rustdesk.com" rustdesk/librustdesk.dll; then echo "quedo el servidor publico de RustDesk"; exit 1; fi
-          echo "marca verificada en librustdesk.dll"
+          import sys
+          dll = open("rustdesk/librustdesk.dll", "rb").read()
+          exe = open("rustdesk/${{ env.APP_NAME }}.exe", "rb").read()
+          faltan = [s for s in ("remoto.novatechnology-support.com.ar", "ZStbb6QWLFXZPoCU4oY5DYUXhV1E8Wmgeqqb51CeszE=")
+                    if s.encode() not in dll]
+          faltan += [s for s in ("Nova Ingenieria", "${{ env.APP_NAME }}") if s.encode("utf-16-le") not in exe]
+          if b"rs-ny.rustdesk.com" in dll:
+              faltan.append("(sobra) rs-ny.rustdesk.com")
+          if faltan:
+              sys.exit("marca incompleta: " + ", ".join(faltan))
+          print("marca verificada: servidor y llave en librustdesk.dll; empresa y producto en el exe")
 
       - name: find Runner.res
         shell: bash
