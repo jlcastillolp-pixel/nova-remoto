@@ -184,6 +184,23 @@ jobs:
           popd
           Get-FileHash ./SignOutput/* -Algorithm SHA256 | Format-List
 
+      - name: Verificar marca en los entregables
+        run: |
+          $vi = (Get-Item "./SignOutput/${{ env.APP_NAME }}-${{ env.VERSION }}-x64.exe").VersionInfo
+          $vi | Format-List CompanyName, ProductName, FileDescription, LegalCopyright
+          if ($vi.CompanyName -ne "Nova Ingenieria" -or $vi.ProductName -ne "${{ env.APP_NAME }}") { throw "exe portable sin la marca Nova" }
+          $i = New-Object -ComObject WindowsInstaller.Installer
+          $db = $i.GetType().InvokeMember("OpenDatabase", "InvokeMethod", $null, $i, @((Resolve-Path "./SignOutput/${{ env.APP_NAME }}-${{ env.VERSION }}-x64.msi").Path, 0))
+          foreach ($p in "ProductName", "Manufacturer", "ARPCONTACT", "ARPHELPLINK", "ARPREADME") {
+            $v = $db.GetType().InvokeMember("OpenView", "InvokeMethod", $null, $db, @("SELECT Value FROM Property WHERE Property='$p'"))
+            $v.GetType().InvokeMember("Execute", "InvokeMethod", $null, $v, $null)
+            $r = $v.GetType().InvokeMember("Fetch", "InvokeMethod", $null, $v, $null)
+            if (-not $r) { throw "falta $p en el msi" }
+            $val = $r.GetType().InvokeMember("StringData", "GetProperty", $null, $r, 1)
+            "$p = $val"
+            if ($val -match "rustdesk/rustdesk") { throw "$p del msi apunta a RustDesk" }
+          }
+
       - name: Upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

@@ -12,21 +12,23 @@ APP_NAME="NovaRemoto"
 SERVIDOR="remoto.novatechnology-support.com.ar"
 # Llave pública del hbbs de Nova (BAREMETAL /root/rustdesk/data/id_ed25519.pub).
 LLAVE="ZStbb6QWLFXZPoCU4oY5DYUXhV1E8Wmgeqqb51CeszE="
+SOPORTE="https://soporte.novatechnology-support.com.ar"
+# Código fuente del cliente modificado (AGPL-3.0).
+FUENTE="https://github.com/jlcastillolp-pixel/nova-remoto"
 
-reemplazar() { # archivo  literal_viejo  literal_nuevo
-  local f="$1" viejo="$2" nuevo="$3" n
-  n=$(grep -cF -- "$viejo" "$f" || true)
-  if [ "$n" != "1" ]; then
-    echo "ERROR: en $f se esperaba 1 vez «$viejo» y hay $n" >&2
-    exit 1
-  fi
-  python3 - "$f" "$viejo" "$nuevo" <<'PY'
+reemplazar() { # archivo  literal_viejo  literal_nuevo   (admite varias líneas; el archivo queda en LF)
+  python3 - "$1" "$2" "$3" <<'PY'
 import sys
 f, viejo, nuevo = sys.argv[1:4]
 t = open(f, encoding="utf-8").read()
-open(f, "w", encoding="utf-8", newline="").write(t.replace(viejo, nuevo, 1))
+n = t.count(viejo)
+if n != 1:
+    sys.exit(f"ERROR: en {f} se esperaba 1 vez «{viejo}» y hay {n}")
+t = t.replace(viejo, nuevo, 1)
+open(f, "w", encoding="utf-8", newline="").write(t)
+if nuevo not in open(f, encoding="utf-8").read():
+    sys.exit(f"ERROR: no quedó «{nuevo}» en {f}")
 PY
-  grep -qF -- "$nuevo" "$f" || { echo "ERROR: no quedó «$nuevo» en $f" >&2; exit 1; }
 }
 
 CFG=libs/hbb_common/src/config.rs
@@ -43,6 +45,27 @@ reemplazar "$RC" '"FileDescription", "RustDesk Remote Desktop"' '"FileDescriptio
 reemplazar "$RC" '"ProductName", "RustDesk"' "\"ProductName\", \"$APP_NAME\""
 reemplazar "$RC" '"LegalCopyright", "Copyright © 2026 Purslane Tech Pte. Ltd. All rights reserved."' \
   '"LegalCopyright", "Nova Ingenieria. Basado en RustDesk (AGPL-3.0, Purslane Tech Pte. Ltd.)"'
+
+# El exe portable es el empaquetador libs/portable: sus datos de versión salen de su Cargo.toml.
+PT=libs/portable/Cargo.toml
+reemplazar "$PT" 'LegalCopyright = "Copyright © 2026 Purslane Tech Pte. Ltd. All rights reserved."' \
+  'LegalCopyright = "Nova Ingenieria. Basado en RustDesk (AGPL-3.0, Purslane Tech Pte. Ltd.)"'
+reemplazar "$PT" 'ProductName = "RustDesk"' "ProductName = \"$APP_NAME\""
+reemplazar "$PT" 'OriginalFilename = "rustdesk.exe"' "OriginalFilename = \"$APP_NAME.exe\""
+reemplazar "$PT" 'FileDescription = "RustDesk Remote Desktop"' 'FileDescription = "Nova Remoto - Soporte remoto de Nova Ingenieria"'
+reemplazar "$PT" '#ProductVersion = ""' 'CompanyName = "Nova Ingenieria"'
+
+# Enlaces de «Programas instalados» del MSI.
+MSI=res/msi/preprocess.py
+reemplazar "$MSI" $'"msi": "ARPCONTACT",\n        "v": "https://github.com/rustdesk/rustdesk",' \
+  "\"msi\": \"ARPCONTACT\",
+        \"v\": \"$SOPORTE\","
+reemplazar "$MSI" $'"msi": "ARPHELPLINK",\n        "v": "https://github.com/rustdesk/rustdesk/issues/",' \
+  "\"msi\": \"ARPHELPLINK\",
+        \"v\": \"$SOPORTE\","
+reemplazar "$MSI" $'"msi": "ARPREADME",\n        "v": "https://github.com/rustdesk/rustdesk",' \
+  "\"msi\": \"ARPREADME\",
+        \"v\": \"$FUENTE\","
 
 M=nova/marca
 cp -f "$M/icon.ico" res/icon.ico
