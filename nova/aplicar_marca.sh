@@ -67,6 +67,23 @@ reemplazar "$MSI" $'"msi": "ARPREADME",\n        "v": "https://github.com/rustde
   "\"msi\": \"ARPREADME\",
         \"v\": \"$FUENTE\","
 
+# UI: sin «Con tecnología de RustDesk» (enlace a rustdesk.com) arriba a la izquierda.
+reemplazar flutter/lib/common.dart \
+  "if (bind.mainGetBuildinOption(key: \"hide-powered-by-me\") == 'Y') {" \
+  'if (true) { // Nova: cliente propio, sin «powered by»'
+# UI: sin «configure su propio servidor». Lo decide using_public_server(), que mira solo la
+# opción custom-rendezvous-server; este cliente trae el servidor de Nova compilado adentro.
+reemplazar src/common.rs \
+  'crate::get_custom_rendezvous_server(get_option("custom-rendezvous-server")).is_empty()' \
+  'false // Nova: servidor propio compilado (RENDEZVOUS_SERVERS)'
+# Ajustes → Acerca de: enlaces de Nova y el código fuente (AGPL-3.0); se conserva el copyright original.
+AC=flutter/lib/desktop/pages/desktop_setting_page.dart
+reemplazar "$AC" "launchUrlString('https://rustdesk.com');" "launchUrlString('$SOPORTE');"
+reemplazar "$AC" "launchUrlString('https://rustdesk.com/privacy.html');" "launchUrlString('$FUENTE');"
+reemplazar "$AC" "translate('Privacy Statement')" "'Código fuente (AGPL-3.0)'"
+reemplazar "$AC" 'Purslane Tech Pte. Ltd.\n$license' \
+  'Purslane Tech Pte. Ltd. (RustDesk)\nNovaRemoto: Nova Ingenieria\n$license'
+
 M=nova/marca
 cp -f "$M/icon.ico" res/icon.ico
 cp -f "$M/tray-icon.ico" res/tray-icon.ico
