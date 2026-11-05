@@ -149,10 +149,10 @@ jobs:
           if b"rs-ny.rustdesk.com" in dll:
               faltan.append("(sobra) rs-ny.rustdesk.com")
           ui = open("rustdesk/data/app.so", "rb").read()
-          faltan += [s for s in ("soporte.novatechnology-support.com.ar", "jlcastillolp-pixel/nova-remoto")
+          faltan += [s for s in ("soporte.novatechnology-support.com.ar", "descargas.novatechnology-support.com.ar/remoto/fuente/")
                      if s.encode() not in ui]
-          if b"rustdesk.com/privacy.html" in ui:
-              faltan.append("(sobra en la UI) rustdesk.com/privacy.html")
+          if b"rustdesk.com/privacy.html" in ui or b"jlcastillolp" in ui:
+              faltan.append("(sobra en la UI) rustdesk.com/privacy.html o el usuario de GitHub")
           if faltan:
               sys.exit("marca incompleta: " + ", ".join(faltan))
           print("marca verificada: servidor y llave en librustdesk.dll; empresa y producto en el exe")

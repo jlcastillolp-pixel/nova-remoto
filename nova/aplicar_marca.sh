@@ -14,7 +14,7 @@ SERVIDOR="remoto.novatechnology-support.com.ar"
 LLAVE="ZStbb6QWLFXZPoCU4oY5DYUXhV1E8Wmgeqqb51CeszE="
 SOPORTE="https://soporte.novatechnology-support.com.ar"
 # Código fuente del cliente modificado (AGPL-3.0).
-FUENTE="https://github.com/jlcastillolp-pixel/nova-remoto"
+FUENTE="https://descargas.novatechnology-support.com.ar/remoto/fuente/"
 
 reemplazar() { # archivo  literal_viejo  literal_nuevo   (admite varias líneas; el archivo queda en LF)
   python3 - "$1" "$2" "$3" <<'PY'
