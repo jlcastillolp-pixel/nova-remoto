@@ -83,6 +83,12 @@ reemplazar "$AC" "launchUrlString('https://rustdesk.com/privacy.html');" "launch
 reemplazar "$AC" "translate('Privacy Statement')" "'Código fuente (AGPL-3.0)'"
 reemplazar "$AC" 'Purslane Tech Pte. Ltd.\n$license' \
   'Purslane Tech Pte. Ltd. (RustDesk)\nNovaRemoto: Nova Ingenieria\n$license'
+# Instalación: «Acuerdo de licencia» lleva al fork (AGPL-3.0), no a la privacidad de rustdesk.com.
+IP=flutter/lib/desktop/pages/install_page.dart
+reemplazar "$IP" $'launchUrlString(\n                                \'https://rustdesk.com/privacy.html\'),' \
+  "launchUrlString(
+                                '$FUENTE'),"
+reemplazar "$IP" "message: 'https://rustdesk.com/privacy.html'," "message: '$FUENTE',"
 
 M=nova/marca
 cp -f "$M/icon.ico" res/icon.ico

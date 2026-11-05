@@ -148,6 +148,11 @@ jobs:
           faltan += [s for s in ("Nova Ingenieria", "${{ env.APP_NAME }}") if s.encode("utf-16-le") not in exe]
           if b"rs-ny.rustdesk.com" in dll:
               faltan.append("(sobra) rs-ny.rustdesk.com")
+          ui = open("rustdesk/data/app.so", "rb").read()
+          faltan += [s for s in ("soporte.novatechnology-support.com.ar", "jlcastillolp-pixel/nova-remoto")
+                     if s.encode() not in ui]
+          if b"rustdesk.com/privacy.html" in ui:
+              faltan.append("(sobra en la UI) rustdesk.com/privacy.html")
           if faltan:
               sys.exit("marca incompleta: " + ", ".join(faltan))
           print("marca verificada: servidor y llave en librustdesk.dll; empresa y producto en el exe")
